@@ -23,15 +23,15 @@
   padding: 10px;
   background: rgba(255, 255, 255, 0.1);
   border-radius: 10px;
-  border-left: 5px solid #ff8000;
+  border-left: 5px solid #fdb46a;
 }
 
 .query {
   font-weight: bold;
-  color: #ff0000;
+  color: #ff8e8e;
 }
 
 .response {
   margin-top: 5px;
-  color: #ffff00;
+  color: #fff171;
 }

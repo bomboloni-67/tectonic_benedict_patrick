@@ -10,7 +10,7 @@
   font-size: 1rem;
   border: none;
   border-radius: 20px;
-  background: linear-gradient(45deg, #ff8000, #ffff00);
+  background: linear-gradient(45deg, #fdb46a, #fff171);
   color: black;
   cursor: pointer;
   transition: all 0.3s ease;
@@ -18,6 +18,6 @@
 }
 
 .action-button:hover {
-  background: linear-gradient(45deg, #ffff00, #ff0000);
+  background: linear-gradient(45deg, #ff8e8e, #fdb46a);
   box-shadow: 0 0 20px rgba(255, 255, 0, 0.7);
 }
