@@ -9,8 +9,8 @@
 
 .chat-history h2 {
   margin-top: 0;
-  color: #ffff00;
-  text-shadow: 0 0 10px rgba(255, 255, 0, 0.8);
+  color: #000000;
+  text-shadow: 0 0 10px rgba(238, 238, 138, 0.8);
 }
 
 .history-list {
@@ -21,17 +21,17 @@
 .chat-item {
   margin-bottom: 15px;
   padding: 10px;
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.1);
   border-radius: 10px;
   border-left: 5px solid #fdb46a;
 }
 
 .query {
   font-weight: bold;
-  color: #ff8e8e;
+  color: #3f3f3f;
 }
 
 .response {
   margin-top: 5px;
-  color: #fff171;
+  color: #ffffff;
 }

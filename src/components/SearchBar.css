@@ -27,14 +27,14 @@
   font-size: 1.2rem;
   border: none;
   border-radius: 0 25px 25px 0;
-  background: linear-gradient(45deg, #ff8e8e, #fdb46a, #fff171);
-  color: white;
+  background: rgba(0, 0, 0, 0.1);
+  color: rgb(51, 33, 33);
   cursor: pointer;
   transition: all 0.3s ease;
   box-shadow: 0 0 10px rgba(255, 0, 0, 0.5);
 }
 
 .search-button:hover {
-  background: linear-gradient(45deg, #ff8f1e, #ffff00);
-  box-shadow: 0 0 20px rgba(255, 128, 0, 0.7);
+  background: rgba(255, 179, 179, 0.1);
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.7);
 }
