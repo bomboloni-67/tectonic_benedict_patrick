@@ -10,36 +10,54 @@ function App() {
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSearch = async () => {
-    if (!query.trim()) return;
-    
-    setIsLoading(true);
-    try {
-      const res = await fetch("/.netlify/functions/search", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ query }),
+  if (!query.trim()) return;
+  
+  setIsLoading(true);
+  const currentQuery = query;
+  setQuery('');
+
+  // 1. Create a placeholder in history for the AI to "type" into
+  setChatHistory(prev => [...prev, { query: currentQuery, response: "" }]);
+  const historyIndex = chatHistory.length;
+
+  try {
+    const res = await fetch("/.netlify/functions/search", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ query: currentQuery }),
+    });
+
+    if (!res.ok) throw new Error("Search failed");
+
+    // 2. Attach a reader to the stream
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      // 3. Decode the chunk (this will contain parts of <think> or the answer)
+      const chunk = decoder.decode(value, { stream: true });
+
+      // 4. Update the UI incrementally
+      setChatHistory(prev => {
+        const updated = [...prev];
+        updated[historyIndex].response += chunk;
+        return updated;
       });
-
-      const data = await res.json();
-
-      if (res.ok) {
-        // We use data.answer because that is what search.js returns
-        setChatHistory(prev => [...prev, { query, response: data.answer }]);
-        setQuery('');
-      } else {
-        throw new Error(data.error || "Failed to fetch");
-      }
-    } catch (error) {
-      console.error("Search failed:", error);
-      setChatHistory(prev => [...prev, { 
-        query, 
-        response: "Sorry, I encountered an error connecting to the search service." 
-      }]);
-    } finally {
-      setIsLoading(false);
     }
-  };
-
+  } catch (error) {
+    console.error("Search failed:", error);
+    setChatHistory(prev => {
+      const updated = [...prev];
+      updated[historyIndex].response = "Error connecting to search service.";
+      return updated;
+    });
+  } finally {
+    setIsLoading(false);
+  }
+};
   return (
     <div className="App">
       <header className="App-header">
