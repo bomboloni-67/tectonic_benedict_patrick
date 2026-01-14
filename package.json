@@ -2,7 +2,6 @@
   "name": "rag-llm-tool",
   "version": "0.1.0",
   "private": true,
-  "homepage": "https://bomboloni-67.github.io/tectonic_benedict_patrick",
   "dependencies": {
     "gh-pages": "^5.0.0",
     "react": "^18.2.0",
