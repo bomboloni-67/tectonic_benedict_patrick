@@ -25,3 +25,76 @@ main {
   align-items: center;
   padding: 20px;
 }
+
+
+.expandable-actions {
+  display: flex;
+  gap: 10px;
+  margin: 10px 0;
+}
+
+.btn-toggle {
+  background: #f1f3f4;
+  border: 1px solid #dadce0;
+  border-radius: 18px;
+  padding: 4px 12px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.btn-toggle:hover {
+  background: #e8eaed;
+}
+
+.source-box {
+  background: #f8f9fa;
+  border-left: 4px solid #4285f4;
+  padding: 10px;
+  font-size: 11px;
+  margin-bottom: 10px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.thinking-box {
+  background: #fff9c4;
+  border-left: 4px solid #fbc02d;
+  padding: 10px;
+  font-style: italic;
+  font-size: 13px;
+  color: #555;
+  margin-bottom: 10px;
+}
+
+.login-overlay {
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #0a0a0a;
+}
+
+.login-box {
+  background: rgba(255, 255, 255, 0.05);
+  padding: 40px;
+  border-radius: 12px;
+  border: 1px solid #fdb46a;
+  text-align: center;
+}
+
+.login-box input {
+  background: black;
+  border: 1px solid #444;
+  color: white;
+  padding: 10px;
+  margin: 20px 0;
+  width: 100%;
+}
+
+.login-box button {
+  background: #fdb46a;
+  color: black;
+  font-weight: bold;
+  cursor: pointer;
+}

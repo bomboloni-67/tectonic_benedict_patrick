@@ -1,67 +1,102 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import './App.css';
 import SearchBar from './components/SearchBar';
 import ChatHistory from './components/ChatHistory';
 import Buttons from './components/Buttons';
+import Login from './components/Login'; 
 
 function App() {
   const [query, setQuery] = useState('');
   const [chatHistory, setChatHistory] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [token, setToken] = useState(localStorage.getItem('token'));
+  
+  const currentResponseRef = useRef("");
+
+  const handleLogin = (newToken) => {
+    localStorage.setItem('token', newToken);
+    setToken(newToken);
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    setToken(null);
+  };
 
   const handleSearch = async () => {
-  if (!query.trim()) return;
-  
-  setIsLoading(true);
-  const currentQuery = query;
-  setQuery('');
+    if (!query.trim()) return;
 
-  // 1. Create a placeholder in history for the AI to "type" into
-  setChatHistory(prev => [...prev, { query: currentQuery, response: "" }]);
-  const historyIndex = chatHistory.length;
+    setIsLoading(true);
+    const currentQuery = query;
+    setQuery('');
+    currentResponseRef.current = ""; 
 
-  try {
-    const res = await fetch("/.netlify/functions/search", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ query: currentQuery }),
-    });
+    setChatHistory(prev => [{ query: currentQuery, response: "" }, ...prev]);
+    
+    const historyForContext = chatHistory.map(entry => [
+      {role: 'user', content: entry.query},
+      {role: 'assistant', content: entry.response}
+    ]).flat();
 
-    if (!res.ok) throw new Error("Search failed");
+    const fullMessages= [...historyForContext, {role:'user', content: currentQuery}];
 
-    // 2. Attach a reader to the stream
-    const reader = res.body.getReader();
-    const decoder = new TextDecoder();
+    try {
+      const res = await fetch("/.netlify/functions/search", {
+        method: "POST",
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify({ messages: fullMessages }),
+      });
 
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
+      if (res.status === 401) {
+        handleLogout(); // Force them back to login screen
+        throw new Error("Session expired. Please log in again.");
+      }
 
-      // 3. Decode the chunk (this will contain parts of <think> or the answer)
-      const chunk = decoder.decode(value, { stream: true });
+      if (!res.ok) throw new Error("Search failed");
 
-      // 4. Update the UI incrementally
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        const chunk = decoder.decode(value, { stream: true });
+        currentResponseRef.current += chunk;
+
+        setChatHistory(prev => {
+          const updated = [...prev];
+          updated[0].response = currentResponseRef.current;
+          return updated;
+        });
+      }
+    } catch (error) {
+      console.error("Search failed:", error);
       setChatHistory(prev => {
         const updated = [...prev];
-        updated[historyIndex].response += chunk;
+        updated[0].response = "Error: " + error.message;
         return updated;
       });
+    } finally {
+      setIsLoading(false);
     }
-  } catch (error) {
-    console.error("Search failed:", error);
-    setChatHistory(prev => {
-      const updated = [...prev];
-      updated[historyIndex].response = "Error connecting to search service.";
-      return updated;
-    });
-  } finally {
-    setIsLoading(false);
+  };
+
+  // --- THE GATEKEEPER ---
+  // If no token exists, we return ONLY the Login screen. 
+  // This prevents anyone from seeing your app's internal UI.
+  if (!token) {
+    return <Login onLogin={handleLogin} />;
   }
-};
+
   return (
     <div className="App">
       <header className="App-header">
-        <h1>RAG LLM Internet Search Tool</h1>
+        <h1>Random Autonomous Gazebo</h1>
+        <button className="logout-btn" onClick={handleLogout}>Logout</button>
       </header>
       <main>
         <SearchBar query={query} setQuery={setQuery} onSearch={handleSearch} />
