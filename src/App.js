@@ -10,7 +10,11 @@ function App() {
 
   const handleSearch = () => {
     // Placeholder for RAG LLM search
-    const response = `Response to: ${query}`;
+    const res = await fetch("/.netlify/functions/search", {
+    method: "POST",
+    body: JSON.stringify({ query }),
+      });
+      const data = await res.json();
     setChatHistory([...chatHistory, { query, response }]);
     setQuery('');
   };
