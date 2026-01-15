@@ -2,11 +2,13 @@ import Groq from "groq-sdk";
 import axios from 'axios';
 import * as cheerio from 'cheerio';
 import jwt from "jsonwebtoken";
-
+import YahooFinance from 'yahoo-finance2';
 
 const groq = new Groq({
   apiKey: process.env.GROQ_API_KEY,
 });
+
+const yf = new YahooFinance();
 
 async function getDeepContent(url){
   try{
@@ -32,6 +34,26 @@ async function getDeepContent(url){
     console.error(`failed to scrape ${url}:`, error.message);
     return ""; // Return empty so it doesn't break the whole process
   }
+}
+
+async function extractTickers(userQuery) {
+  const completion = await groq.chat.completions.create({
+    model: "llama-3.3-70b-versatile", // Fast model for intent detection
+    messages: [
+      { 
+        role: "system", 
+        content: "Extract stock ticker symbols from the user query. Return ONLY a comma-separated list of tickers (e.g. TSLA, AAPL). If no stocks are mentioned, return 'NONE'." 
+      },
+      { role: "user", content: userQuery }
+    ],
+    temperature: 0, // Keep it strictly factual
+  });
+
+  const response = completion.choices[0].message.content.trim();
+  if (response === "NONE") return [];
+  
+  // Clean up the string and turn it into an array
+  return response.split(',').map(t => t.trim().toUpperCase());
 }
 
 export default async (req, context) => {
@@ -87,7 +109,7 @@ export default async (req, context) => {
         }
         
         // FILTER: Only add if it's a real website and NOT a DuckDuckGo internal link/ad
-        if (href.startsWith('http') && !href.includes('duckduckgo.com')) {
+        if ((href.startsWith('http') || href.startsWith('https')) && !href.includes('duckduckgo.com')) {
           links.push(href);
         }
       }
@@ -100,6 +122,24 @@ export default async (req, context) => {
     const deepResults = await Promise.all(links.map(url => getDeepContent(url)));
     const searchContext = deepResults.join("\n\n") || "No deep data found.";
 
+    // 2.1 FINANCIAL DATA FECTHING
+    const tickers = await extractTickers(query);
+    let inputContext = searchContext;
+    let stockContext = "";
+    if (tickers.length > 0) {
+      try{
+        const quotes = await yf.quote(tickers);
+        // Ensure we always have an array for formatting
+        const quotesArray = Array.isArray(quotes) ? quotes : [quotes];
+        stockContext = `--- STOCK DATA ---\n:${JSON.stringify(quotesArray, null, 2)}\n`;
+        inputContext += "\n\n"+stockContext;
+
+
+      } catch (error){
+        console.error("Yahoo Finance fetch error:", error.message);
+      }
+    }
+
     // 3. THE GROQ CALL
     const stream = await groq.chat.completions.create({
       model: "qwen/qwen3-32b",
@@ -110,7 +150,7 @@ export default async (req, context) => {
           Today is ${today}. 
           Answer the user's question using the search context below. 
           If context is old, prioritize the fact today is ${today}.
-          Context: ${searchContext}` 
+          Context: ${inputContext}` 
         },
         { role: "user", content: query },
         ...messages.slice(-5) 
@@ -124,7 +164,7 @@ export default async (req, context) => {
       async start(controller) {
         const encoder = new TextEncoder();
 
-        const contextPayload = `<context>${searchContext}</context>`;
+        const contextPayload = `<context>${inputContext}</context>`;
         controller.enqueue(encoder.encode(contextPayload));
         try {
           for await (const chunk of stream) {

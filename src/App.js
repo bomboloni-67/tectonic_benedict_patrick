@@ -23,6 +23,10 @@ function App() {
     setToken(null);
   };
 
+  const handleClearHistory = () => {
+    setChatHistory([]);
+  };
+
   const handleSearch = async () => {
     if (!query.trim()) return;
 
@@ -101,7 +105,7 @@ function App() {
       <main>
         <SearchBar query={query} setQuery={setQuery} onSearch={handleSearch} />
         {isLoading && <div className="loading-indicator">Searching the web and thinking...</div>}
-        <Buttons />
+        <Buttons onClearHistory={handleClearHistory} />
         <ChatHistory history={chatHistory} />
       </main>
     </div>
