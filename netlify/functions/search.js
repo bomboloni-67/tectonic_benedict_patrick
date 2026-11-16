@@ -157,7 +157,7 @@ export default async (req, context) => {
         ...messages.slice(-5) 
       ],
       temperature: 0.2, // Lower temp for more factual stability
-      reasoning_format: "raw", 
+      reasoning_format: "medium", 
       stream: true,
     });
 
