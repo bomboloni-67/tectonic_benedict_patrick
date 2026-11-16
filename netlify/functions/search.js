@@ -39,7 +39,7 @@ async function getDeepContent(url){
 async function extractTickers(userQuery) {
   const completion = await groq.chat.completions.create({
     //model: "llama-3.3-70b-versatile", // Fast model for intent detection (deprecated)
-    model: "openai/gpt-oss-120b",
+    model: "openai/gpt-oss-20b",
     messages: [
       { 
         role: "system", 
@@ -143,7 +143,7 @@ export default async (req, context) => {
 
     // 3. THE GROQ CALL
     const stream = await groq.chat.completions.create({
-      model: "qwen/qwen3-32b",
+      model: "openai/gpt-oss-120b",
       messages: [
         { 
           role: "system", 
